@@ -1,0 +1,59 @@
+>training on human data
+>testing on: 
+    1.ecoli
+    2.fly
+    3.Mouse
+    4.worm
+    5.yeast
+
+.......................................................................
+.......................................................................
+
+o) dscript/commands/train.py
+
+    - Line #708 main()
+
+        - The input command line arguments are parsed
+        - Line #738 train_model is called 
+            - Line #437 train_model() function
+                - Line#467 train_dataset is created using the PairedDataset function from utils.py
+                - Line#484 Test_dataset is created using the PairedDataset function from utils.py
+                o)train and test data iterators are initialized
+                - if args.checkpoint is not True
+                    - Line# 526 Embedding Model is initailized with the parameters from args using the FullyConnectedEmbed model from embedding.py
+                        embedding.py
+                        - Line #24 FullyConnectedEmbed class
+                            - Line#38 __init__ method -> initializes the dimensions and a linear transformation with the dropout and activation
+                            - Line#48 forward method -> applies the transformation followed by the activation fucntion and the droput            
+                            o)returns the low dimension projection of the embedding
+                    - Line#540 Contact model in initailized using ContactCNN model imported from contact.py
+                        contact.py
+                        forward() method
+                        - Line#102 cmap method is called from forward with the parameters as the embeddings
+                        - Line#116 self.hidden is called from cmap()
+                        - Line#77 self.hidden calls the FullyConnectd function
+                            - Line #9 FullyConnected()
+                            - Line#43,44 the transpose of the embeddings is taken
+                            - Line#47 pairwise differece is taken
+                            - Line#48 pairwize product is taken
+                                o) These are then concatenated
+                            o) Convolution is applied followed by non-linear activation and batchnormalization
+                            o) Returns the brodcast matrix
+                        - Line #103 self.predict calls the predict method
+                            o) Applies Convolution batchnormalization and sigmoid activation function
+                            o) Returns the contact matrix from the brodcast matrix
+                    - Line#552 ModelInteraction(interaction.py) is initialized with the contact_model and embedding_model
+                        - Line#233 self.predict()
+                            - Line#226 self.map_predict()
+                                - Line 168 self.cpred()
+                                o)Project down input language model embeddings into low dimension using projection module
+                            o) Applies maxpooling on the contact map
+                            o) The matrix Q sparsifies P, maintaining only those contacts which are γσ^2 greater than the mean, and setting all others to zero.
+                            o) Using Q finds the raw probability then applies sigmoid activation function
+                            o) Returns the Predicted contact map & predicted probability of interaction
+                        o) Returns the single probability of interaction
+                - Line#602 The model is trained for a number of epochs
+                    - Line#604 model.train()
+                        0) Using the train_iterator the model is trained in batches
+                    - Line#656 model.eval() 
+        - Line#740 output.close()
